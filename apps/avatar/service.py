@@ -1,21 +1,22 @@
 from __future__ import annotations
 
-import hashlib
 import json
 from collections import defaultdict
 from typing import Any
 
+from openai import AsyncOpenAI
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.avatar.models import AvatarCategory
 from apps.avatar.repository import AvatarRepository
 from apps.avatar.schemas import AvatarChunk, OnboardingAnswer, OnboardingCompletedPayload
-from core.config import settings
+from core.embeddings import embed_text
 
 
 class AvatarIngestService:
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession, client: AsyncOpenAI | None = None):
         self.repo = AvatarRepository(session)
+        self.client = client or AsyncOpenAI()
 
     async def ingest(self, event: OnboardingCompletedPayload) -> bool:
         if await self.repo.has_processed_event(event.event_id):
@@ -34,7 +35,7 @@ class AvatarIngestService:
 
         chunks = self._build_chunks(event)
         for chunk in chunks:
-            embedding = self._embed(chunk.content)
+            embedding = await self._embed(chunk.content)
             await self.repo.upsert_embedding(
                 event_id=event.event_id,
                 user_id=event.user_id,
@@ -99,22 +100,8 @@ class AvatarIngestService:
             return AvatarCategory.USER_INFO.value
         return AvatarCategory.OTHER.value
 
-    @staticmethod
-    def _embed(text: str) -> list[float]:
-        dim = settings.EMBEDDING_DIM
-        seed = text.encode("utf-8")
-
-        values: list[float] = []
-        nonce = 0
-        while len(values) < dim:
-            digest = hashlib.sha256(seed + nonce.to_bytes(4, "big")).digest()
-            for b in digest:
-                values.append((b / 255.0) * 2.0 - 1.0)
-                if len(values) == dim:
-                    break
-            nonce += 1
-
-        return values
+    async def _embed(self, text: str) -> list[float]:
+        return await embed_text(self.client, text)
 
 
 def build_payload_from_stream(fields: dict[str, Any]) -> OnboardingCompletedPayload:

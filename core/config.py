@@ -16,6 +16,31 @@ class Settings:
     REDIS_COUNT = int(os.getenv("REDIS_COUNT", "20"))
 
     EMBEDDING_DIM = int(os.getenv("EMBEDDING_DIM", "64"))
+    EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
+    CHAT_MODEL = os.getenv("CHAT_MODEL", "gpt-4.1-mini-2025-04-14")
+    CHAT_TOP_K = int(os.getenv("CHAT_TOP_K", "3"))
+
+    # 프로젝트 정책상 사용 가능한 모델만 허용한다.
+    ALLOWED_CHAT_MODELS = {
+        "gpt-5-codex",
+        "gpt-5-2025-08-07",
+        "gpt-5-chat-latest",
+        "gpt-4.1-2025-04-14",
+        "gpt-4o-2024-05-13",
+        "gpt-4o-2024-08-06",
+        "gpt-4o-2024-11-20",
+        "o3-2025-04-16",
+        "o1-preview-2024-09-12",
+        "o1-2024-12-17",
+        "gpt-5-mini-2025-08-07",
+        "gpt-5-nano-2025-08-07",
+        "gpt-4.1-mini-2025-04-14",
+        "gpt-4.1-nano-2025-04-14",
+        "gpt-4o-mini-2024-07-18",
+        "o4-mini-2025-04-16",
+        "o1-mini-2024-09-12",
+        "codex-mini-latest",
+    }
 
 
 settings = Settings()

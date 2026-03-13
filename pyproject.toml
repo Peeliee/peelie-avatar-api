@@ -8,6 +8,7 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "fastapi (>=0.135.1,<0.136.0)",
+    "openai (>=2.0.0,<3.0.0)",
     "pgvector (>=0.4.2,<0.5.0)",
     "greenlet (>=3.3.2,<4.0.0)",
     "sqlalchemy (>=2.0)",
