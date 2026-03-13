@@ -1,0 +1,63 @@
+name: Build and Push Avatar Image (ECR Public)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docker-push:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      ECR_PUBLIC_REGISTRY: ${{ secrets.ECR_PUBLIC_REGISTRY }}
+      ECR_PUBLIC_REPOSITORY: ${{ secrets.ECR_PUBLIC_REPOSITORY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Poetry
+        run: pip install --no-cache-dir poetry==2.1.4
+
+      - name: Install dependencies
+        run: poetry install --with dev --no-interaction --no-ansi
+
+      - name: Run tests
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/peelie
+          REDIS_URL: redis://localhost:6379/0
+          OPENAI_API_KEY: test-key
+        run: poetry run pytest -q
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR Public
+        run: |
+          aws ecr-public get-login-password --region "${AWS_REGION}" \
+            | docker login --username AWS --password-stdin "${ECR_PUBLIC_REGISTRY}"
+
+      - name: Build and push image
+        env:
+          IMAGE_TAG: avatar-${{ github.sha }}
+        run: |
+          IMAGE_URI="${ECR_PUBLIC_REGISTRY}/${ECR_PUBLIC_REPOSITORY}:${IMAGE_TAG}"
+          echo "IMAGE_URI=${IMAGE_URI}" >> "${GITHUB_ENV}"
+          docker build -t "${IMAGE_URI}" .
+          docker push "${IMAGE_URI}"
+
+      - name: Show pushed image
+        run: echo "Pushed ${IMAGE_URI}"
