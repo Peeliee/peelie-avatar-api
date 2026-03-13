@@ -28,6 +28,9 @@ jobs:
       - name: Install Poetry
         run: pip install --no-cache-dir poetry==2.1.4
 
+      - name: Refresh lock file for CI
+        run: poetry lock --no-interaction
+
       - name: Install dependencies
         run: poetry install --no-interaction --no-ansi
 
