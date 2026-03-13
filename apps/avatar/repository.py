@@ -16,6 +16,27 @@ class AvatarRepository:
         result = await self.session.execute(query)
         return result.scalar_one_or_none() is not None
 
+    async def get_profile_by_user_id(self, user_id: int) -> AvatarProfile | None:
+        query: Select[tuple[AvatarProfile]] = select(AvatarProfile).where(AvatarProfile.user_id == user_id)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
+
+    async def find_similar_embeddings(
+        self,
+        user_id: int,
+        query_embedding: list[float],
+        top_k: int,
+    ) -> list[str]:
+        query: Select[tuple[AvatarEmbedding]] = (
+            select(AvatarEmbedding)
+            .where(AvatarEmbedding.user_id == user_id)
+            .order_by(AvatarEmbedding.embedding.cosine_distance(query_embedding))
+            .limit(top_k)
+        )
+        result = await self.session.execute(query)
+        rows = result.scalars().all()
+        return [row.content for row in rows]
+
     async def upsert_profile(
         self,
         event_id: str,
