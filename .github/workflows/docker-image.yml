@@ -32,7 +32,7 @@ jobs:
         run: poetry lock --no-interaction
 
       - name: Install dependencies
-        run: poetry install --no-interaction --no-ansi
+        run: poetry install --no-root --no-interaction --no-ansi
 
       - name: Install test tools
         run: poetry run pip install --no-cache-dir pytest pytest-asyncio
