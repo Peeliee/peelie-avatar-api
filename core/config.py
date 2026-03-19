@@ -7,6 +7,7 @@ load_dotenv()
 class Settings:
     DATABASE_URL = os.getenv("DATABASE_URL")
     DEBUG = os.getenv("DEBUG") == "True"
+    BENCHMARK_FAKE_EMBEDDING = os.getenv("BENCHMARK_FAKE_EMBEDDING", "false").lower() == "true"
 
     REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     REDIS_STREAM_KEY = os.getenv("REDIS_STREAM_KEY", "stream:onboarding-events")
