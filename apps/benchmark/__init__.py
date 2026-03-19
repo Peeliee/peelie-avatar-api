@@ -1,2 +1,1 @@
-from apps.benchmark.router import router
-
+"""Benchmark application package."""

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
+import apps.benchmark.router as benchmark_router_module
 from main import app
 
 
@@ -22,7 +23,7 @@ class FakeBenchmarkService:
 
 
 def test_benchmark_router_accepts_internal_ingest_request(monkeypatch):
-    monkeypatch.setattr("apps.benchmark.router.BenchmarkAvatarIngestService", FakeBenchmarkService)
+    monkeypatch.setattr(benchmark_router_module, "BenchmarkAvatarIngestService", FakeBenchmarkService)
 
     client = TestClient(app)
     response = client.post(
