@@ -21,3 +21,8 @@ class ChatResponse(BaseModel):
     model: str
     answer: str
     used_contexts: list[str]
+
+
+class ChatStreamEvent(BaseModel):
+    event: Literal["meta", "delta", "done", "error"]
+    data: dict
